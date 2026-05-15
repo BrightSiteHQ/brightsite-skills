@@ -1,0 +1,22 @@
+{
+  "name": "brightsite",
+  "owner": {
+    "name": "BrightSite",
+    "url": "https://onbrightsite.com"
+  },
+  "plugins": [
+    {
+      "name": "brightsite-skills",
+      "source": ".",
+      "description": "Skills for agencies running client sites on BrightSite: WordPress migration, programmatic SEO, bulk SEO audits, redirect imports, pre-launch QA, and blog drafting. Calls the hosted BrightSite MCP.",
+      "version": "0.1.0",
+      "author": {
+        "name": "BrightSite",
+        "url": "https://onbrightsite.com"
+      },
+      "homepage": "https://github.com/BrightSiteHQ/skills",
+      "license": "MIT",
+      "keywords": ["brightsite", "cms", "seo", "wordpress-migration", "agency", "mcp"]
+    }
+  ]
+}
