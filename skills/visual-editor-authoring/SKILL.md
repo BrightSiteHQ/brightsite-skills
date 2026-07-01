@@ -144,3 +144,24 @@ non-empty `props_schema`.
   to layout content.
 - `mcp__brightsite__get_page` / `mcp__brightsite__get_component` — re-fetch to verify
   markers and a non-empty `props_schema` before reporting done.
+
+## Uploading images to the media library
+
+To reference a real image in a page (`media(file_id)` / `media(file_id, aspect: "16:9")`
+/ `media_url(file_id)`), the file must first exist in the org's media library. Use the
+**two-step presigned flow** — do NOT use `mcp__brightsite__upload_file` (the local-path
+convenience tool returns a bare `Internal error`):
+
+1. `mcp__brightsite__request_upload` `{account_id, file_name, content_type}` → returns
+   `{file_id, upload_url}` (a presigned Cloudflare R2 URL, ~2h expiry).
+2. HTTP **PUT** the raw bytes to `upload_url` with a matching `Content-Type` header:
+   `curl -X PUT -H "Content-Type: image/jpeg" --data-binary @file.jpg "$URL"` → expect **200**.
+3. `mcp__brightsite__complete_upload` `{account_id, file_id, file_name, name,
+   content_type, width, height, size}` → creates the DB media record and returns
+   `{id, thumb_url, md_url, lg_url, orig_url}`. The returned `id` == the `file_id` you
+   passed; use it in `media(...)`.
+
+Gotchas: use a `.jpg` extension, never `.jpeg` (the CDN signed-URL pipeline 404s on
+`.jpeg` objects). Resize huge originals (3500px+) down to ~1400–2000px before the PUT so
+uploads stay fast. For blog feature images, the same `id` is what you pass as
+`feature_image_id` (preferred over `feature_image_url`, which is for external URLs).
