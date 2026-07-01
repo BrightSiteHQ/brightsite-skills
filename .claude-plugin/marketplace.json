@@ -14,7 +14,7 @@
         "name": "BrightSite",
         "url": "https://onbrightsite.com"
       },
-      "homepage": "https://github.com/BrightSiteHQ/skills",
+      "homepage": "https://github.com/BrightSiteHQ/brightsite-skills",
       "license": "MIT",
       "keywords": ["brightsite", "cms", "seo", "wordpress-migration", "agency", "mcp", "visual-editor"]
     }

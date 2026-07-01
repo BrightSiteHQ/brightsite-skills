@@ -18,10 +18,10 @@ Once your MCP is connected, install the skills. Pick whichever path fits your se
 
 ```bash
 # project-local (./.claude/skills)
-npx skills add BrightSiteHQ/skills
+npx skills add BrightSiteHQ/brightsite-skills
 
 # or globally (~/.claude/skills)
-npx skills add -g BrightSiteHQ/skills
+npx skills add -g BrightSiteHQ/brightsite-skills
 ```
 
 Powered by [vercel-labs/skills](https://github.com/vercel-labs/skills). Run `npx skills list` to see what's installed, `npx skills update` to pull latest.
@@ -29,7 +29,7 @@ Powered by [vercel-labs/skills](https://github.com/vercel-labs/skills). Run `npx
 ### Option 2: Claude Code plugin marketplace
 
 ```text
-/plugin marketplace add BrightSiteHQ/skills
+/plugin marketplace add BrightSiteHQ/brightsite-skills
 /plugin install brightsite-skills@brightsite
 ```
 
@@ -37,7 +37,7 @@ Powered by [vercel-labs/skills](https://github.com/vercel-labs/skills). Run `npx
 
 ```bash
 TMP=$(mktemp -d) && \
-  git clone --depth 1 https://github.com/BrightSiteHQ/skills.git "$TMP" && \
+  git clone --depth 1 https://github.com/BrightSiteHQ/brightsite-skills.git "$TMP" && \
   mkdir -p ~/.claude/skills && \
   cp -R "$TMP"/skills/* ~/.claude/skills/ && \
   rm -rf "$TMP"
