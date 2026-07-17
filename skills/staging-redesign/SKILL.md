@@ -37,7 +37,9 @@ takes an optional **`site`** param:
 
 - **omitted** or `"live"` → the live site (default, backwards-compatible).
 - `"staging"` → the account's staging site.
-- an explicit **site ID** (from `list_staging_sites`) → that specific site.
+- an explicit **site ID** (from `list_staging_sites`) → that specific site, as long as it's
+  **active** (`live` or `staging`). Archived sites (rollback snapshots) are rejected —
+  they're immutable history; `restore_staging_site` first if you need to edit one.
 
 Authorization is still by `account_id` — you must be a member of the org, and the target
 site must belong to it. Passing a staging site ID as `account_id` does **not** work (it's a
