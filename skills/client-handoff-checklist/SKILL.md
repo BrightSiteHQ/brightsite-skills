@@ -7,6 +7,10 @@ description: Pre-launch QA pass for a BrightSite site before handing it to a cli
 
 Every agency forgets something. This is the "before you push the launch button" QA pass for a BrightSite site. Run it the day before going live.
 
+> If the launch is a **redesign built on a staging site**, run this checklist against the
+> staging site (pass `site: "staging"` on the read tools below, or point at the staging
+> `preview_url`) *before* you `promote_staging`. See the `staging-redesign` skill.
+
 ## When to use this
 
 - About to point the domain at a BrightSite site.
