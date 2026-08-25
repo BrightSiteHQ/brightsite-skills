@@ -24,6 +24,10 @@ how-to; the contract is the reference.
 If you're only auditing or fixing an **existing** site for editability, use the
 `visual-editor-audit` skill instead.
 
+If you're doing a **full redesign or large rebuild** that shouldn't be visible on the live
+site until it's ready, build it on a **staging site** — load the `staging-redesign` skill
+and pass `site: "staging"` on the authoring calls below (it composes with every rule here).
+
 ## The rule that prevents 90% of second passes
 
 > The editor sees exactly two editable things: elements tagged `data-bs-edit="field"`, and
