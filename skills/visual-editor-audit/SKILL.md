@@ -11,7 +11,7 @@ editable in the visual editor** — the things a non-technical client can't clic
 (which prevents the problem at create time).
 
 The rules this audit enforces live in
-**[../visual-editor-authoring/editability-contract.md](../visual-editor-authoring/editability-contract.md)**.
+**[editability-contract.md](editability-contract.md)** (in this skill's directory).
 Read that file first; it is the source of truth for every check below.
 
 ## When to use this
