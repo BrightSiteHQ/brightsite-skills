@@ -56,6 +56,7 @@ The final layout should be:
 ~/.claude/skills/visual-editor-authoring/editability-contract.md
 ~/.claude/skills/visual-editor-audit/SKILL.md
 ~/.claude/skills/staging-redesign/SKILL.md
+~/.claude/skills/supabase-portal/SKILL.md
 ```
 
 For project-local manual installs, copy individual skill directories (not just the `SKILL.md` files) into your project's `.claude/skills/` directory.
@@ -73,6 +74,7 @@ For project-local manual installs, copy individual skill directories (not just t
 | [visual-editor-authoring](skills/visual-editor-authoring/SKILL.md) | Author pages, components, and layouts that are editable in the visual editor — so non-technical clients can change text, images, links, and props without a second pass. Load before writing HEEx. |
 | [visual-editor-audit](skills/visual-editor-audit/SKILL.md) | Walk an existing site and flag what a client can't edit in the visual editor (no `data-bs-edit` markers, empty `props_schema`, bare loops, hardcoded links), then optionally fix it. |
 | [staging-redesign](skills/staging-redesign/SKILL.md) | Build a redesign or large change on an isolated staging site, preview it at a gated URL, then promote it live in one atomic flip. Uses the `site` param to target staging. |
+| [supabase-portal](skills/supabase-portal/SKILL.md) | Build an auth-gated client portal or member area on a BrightSite site with a Supabase backend: login page, session-gated portal page, and the Row Level Security checklist. Companion to the [BrightSite + Supabase guide](https://onbrightsite.com/integrations/supabase). |
 
 ## How to use a skill
 
