@@ -86,6 +86,14 @@ The staging site is served at its own gated subdomain — the `preview_url` retu
 redesign looks right. Tracking (GA/GTM/Pixel) is suppressed on staging previews, so you
 won't pollute analytics.
 
+> **Known issue: the `preview_url` may return 404.** The staging preview is auth-gated —
+> any request without a logged-in org member's session (curl, a headless screenshot, an
+> incognito window) gets a 404 by design, and as of 2026-08-25 the URL can 404 even in
+> some logged-in contexts. **Do not treat the 404 as a broken staging site** — the
+> staging content is fine. If you can't load the `preview_url`, verify the staging build
+> through the editor or by screenshotting individual staged pages (read them with
+> `site: "staging"`) instead.
+
 ### 4. Review the diff
 
 ```
@@ -102,6 +110,15 @@ reconcile before promoting (re-apply that live edit on staging, or accept the ov
 ```
 mcp__brightsite__promote_staging { account_id: "<ORG_ID>" }
 ```
+
+**Pre-promote checklist:**
+
+- Verify `meta_title` and `meta_description` survived the clone on **every page** — the
+  staging clone is known to drop them. Re-set any that are missing (with
+  `update_page { site: "staging", ... }`) **before** calling `promote_staging`, or the
+  promote wipes every meta title/description on the live site.
+- Run `staging_diff` and reconcile any unintended `drift` (Step 4).
+- Preview the staging build (Step 3).
 
 Runs in the **background**: it validates the staging content and takes a full backup of the
 current live site first, then flips `live_site_id`. It returns immediately with
@@ -134,8 +151,10 @@ mcp__brightsite__discard_staging_site { account_id }   # permanently deletes sta
   `site: "staging"`.
 - **Using a staging site for a one-line copy fix.** Overkill. Use `update_page` +
   `publish_page` on the live site instead.
-- **Promoting without previewing.** Always open the `preview_url` (or screenshot it) and
-  run `staging_diff` first — a promote flips the public site.
+- **Promoting without previewing.** Always verify the staging build (via the
+  `preview_url` if it loads — see the 404 caveat in Step 3 — or through the editor /
+  per-page screenshots with `site: "staging"`) and run `staging_diff` first — a promote
+  flips the public site.
 - **Assuming promote is instant.** It's backgrounded (it backs up live first). Poll
   `get_staging_status` to confirm; don't report "done" off the immediate `"promoting"`.
 - **Expecting analytics/form submissions/tracking IDs to move.** They're account-level and
