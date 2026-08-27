@@ -94,9 +94,34 @@ Call `mcp__brightsite__create_post` with:
 - `status: "draft"` — never "published" from this skill. Note: even `status: "published"` writes content into staged fields; going live requires a separate `mcp__brightsite__publish_post` call. Always create as draft so the user explicitly publishes after review.
 - `feature_image_id` or `feature_image_url` — if the user provided one; otherwise skip
 
+Optional params worth setting when the user gave you the information. Skip any the user didn't ask for — don't invent values:
+
+- `related_post_ids` — array of post IDs for the manually-curated "related posts" block at the bottom of the post, in display order. See "Related posts" below.
+- `published_at` — ISO 8601 datetime (e.g. `2026-01-15T12:00:00Z`) controlling the post date shown publicly. Only set this if the user asked for a specific date (backdating a migrated post, scheduling ahead). Otherwise leave it off — it defaults to the moment the post is first published.
+- `canonical_url` — set when the post is republished from somewhere else and the original should get the SEO credit. Don't set it for original content.
+- `meta_robots` — e.g. `noindex` or `noindex nofollow`. Only for posts that shouldn't rank (thank-you pages, gated content, temporary posts).
+- `og_image_id` — media file ID for the social share image, when it should differ from the feature image.
+- `structured_data` — per-post schema.org JSON-LD, emitted server-side into `<head>`. Do NOT put a `<script type="application/ld+json">` tag in the post body — it duplicates on every LiveView navigation. BlogPosting, Organization/LocalBusiness, WebSite, and BreadcrumbList are already emitted automatically, so only add post-specific entries. Shape: `{"faq": [{"question": "...", "answer": "..."}], "product": {...}, "raw": "<JSON-LD string>"}`. Prefer the typed `faq`/`product` keys over `raw` — they validate. There is no `article` key; the post already emits BlogPosting.
+
 Return the post ID and a note like:
 
 > Draft created: post ID `8fd2k3jq91pn`. Open it in the BrightSite editor to add a feature image, internal links, and publish when ready.
+
+### Related posts
+
+Two different things link a post to other posts. Don't confuse them:
+
+1. **Inline internal links** — `<a href>` tags you write into the post body (Step 2). These are the ones that pass SEO value and give readers context mid-article.
+2. **The related posts block** — a "Keep reading" section BrightSite renders at the bottom of the post. Controlled by `related_post_ids`.
+
+To set the block, pass `related_post_ids` on `create_post` or `update_post` — an array of post IDs in the order they should display. On `update_post` it replaces the whole selection; pass `[]` to clear it.
+
+Two things to know before you use it:
+
+- **It requires the `show_related_posts` blog setting to be on.** If that setting is off, the IDs save but nothing renders on the public site. Check with `mcp__brightsite__get_blog_settings` first. If it's off and the user wants the block, turn it on with `mcp__brightsite__update_blog_settings` (`show_related_posts: true`) — but tell them first, because it's a blog-wide change that affects every post, not just this one.
+- **It is not staged.** Unlike `content_staged` and `excerpt_staged`, `related_post_ids` takes effect immediately — no `publish_post` call needed. So setting it on a draft changes what other, already-live posts can point at right away. Say so when you set it.
+
+Pick related posts from `mcp__brightsite__list_posts`. Choose 2-4 posts that genuinely continue the reader's thought, and stick to ones with `status: published` — a draft has no public URL to link to.
 
 ## Anti-patterns to avoid
 
@@ -105,6 +130,8 @@ Return the post ID and a note like:
 - **Don't pad to hit word count.** If the natural length is 700 words and the target was 1000, return 700 words with a note. Padded posts hurt SEO and bounce rate.
 - **Don't use AI tells.** Strip any of: "dive into," "unleash," "in today's [adjective] world," "in conclusion," "It's important to note that," em-dash-heavy sentences, "let's explore." If the user wants those, they can add them back.
 - **Don't fabricate stats or quotes.** If the outline mentions "stat about adoption rates," ask the user for the source. Don't make it up.
+- **Don't flip blog-wide settings silently.** `show_related_posts` is one switch for the entire blog. If you turn it on so this post's related block renders, say so — the user may not want it on their other 40 posts.
+- **Don't set `related_post_ids` to fill the block.** If nothing on the site is genuinely related, leave it empty. A "keep reading" block full of unrelated posts is worse than no block.
 
 ## Example invocation
 
@@ -122,6 +149,8 @@ Return the post ID and a note like:
 
 (Optional, if you want to enrich the draft)
 
-- `mcp__brightsite__list_posts` — to find internal link opportunities
+- `mcp__brightsite__list_posts` — to find internal link opportunities, and to pick IDs for `related_post_ids`
 - `mcp__brightsite__list_pages` — same
-- `mcp__brightsite__get_blog_settings` — to confirm blog URL prefix for internal links
+- `mcp__brightsite__get_blog_settings` — to confirm the blog URL prefix for internal links, and to check whether `show_related_posts` is on
+- `mcp__brightsite__update_blog_settings` — only to turn `show_related_posts` on, and only after telling the user it's a blog-wide change
+- `mcp__brightsite__list_media` — to find an image ID for `og_image_id`
