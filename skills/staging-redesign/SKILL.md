@@ -13,6 +13,21 @@ makes the staging content live and archives the old live site (restorable). Acco
 data (custom domain, analytics, form submissions, team, billing, tracking IDs) is shared
 and never touched by a promote.
 
+The site's **builtin components** — navigation, footer, and the cookie consent banner
+(`builtin_kind` in `list_components`) — clone into the staging site and promote with it
+like any component, including their content and settings (menu items, footer columns, and
+the banner's enabled state and text), with internal page links re-pointed to the staging
+copies automatically. Restyle their `heex_staged` on staging freely; their
+`name`/`slug`/`props_schema` are system-managed (`update_component` returns
+`builtin_locked_fields`), and their content is edited with
+`get_builtin_content`/`update_builtin_content` (kind `navigation` | `footer` |
+`cookie_consent`; pass `site: "staging"` to edit the staging copy — those writes apply
+live to whichever site you name, so staging is how you stage them).
+
+The cookie banner needs no layout reference on staging either — it is auto-injected into
+every rendered page when enabled, so never add `builtin("cookie_consent")` to a layout you
+are redesigning.
+
 Use this instead of editing the live site directly whenever the change is big enough that
 you don't want visitors seeing a half-finished state, or you need to flip several entities
 (global code + a layout swap + N pages) at the same moment.

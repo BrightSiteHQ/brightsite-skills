@@ -189,3 +189,6 @@ Key reminders while fixing:
 - `mcp__brightsite__get_page` / `mcp__brightsite__get_component` / `mcp__brightsite__get_layout`
 - `mcp__brightsite__update_page` / `mcp__brightsite__update_component` / `mcp__brightsite__update_layout` (only with explicit per-entity approval)
 - `mcp__brightsite__publish_page` / `mcp__brightsite__publish_layout` (to make staged fixes live, with approval)
+- `mcp__brightsite__get_builtin_content` — inspect a builtin (kind `navigation` | `footer` |
+  `cookie_consent`) instead of judging its `props_schema`; builtins are wired to their own
+  editors and must never be flagged as uneditable or rewritten (see the contract).

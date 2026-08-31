@@ -138,6 +138,63 @@ The component two-call sequence (Step 4). It is the easiest thing to get wrong b
 `props_schema` is locked. Never report a component done until `update_component` has set a
 non-empty `props_schema`.
 
+## Builtin navigation, footer & cookie consent
+
+Every site has three **builtin components** — the navigation (menu), the footer, and the
+cookie consent banner — marked with `builtin_kind` (`"navigation"` / `"footer"` /
+`"cookie_consent"`) in `list_components`. Rules:
+
+- **Never hand-build a header or footer** as an ordinary component or inline layout HEEx.
+  Layouts render those builtins with `builtin("navigation")` and `builtin("footer")` (kind
+  reference — survives renames; `component("slug")` also works but is fragile).
+- The **cookie consent banner needs NO layout reference**: when its `enabled` value is
+  true it is injected automatically into every rendered page. **Never write
+  `builtin("cookie_consent")`** (or `component("cookie-consent")`) into a layout — that
+  double-renders the banner. Turning it on is a single `update_builtin_content` call with
+  `{"enabled": true}`.
+- Builtins **cannot be deleted**, and their `name`, `slug`, and `props_schema` are
+  system-managed: `update_component` returns `builtin_locked_fields` if you try to change
+  them. Passing them back unchanged (get → update round-trip) is fine.
+- Their **design** (`heex_staged`/`css_staged`/`js_staged`) IS editable and publishes like
+  any component — but keep referencing the existing props (`@items`, `@buttons`,
+  `@layout`, `@columns`, `@social_style` for nav/footer; `@enabled`, `@message`,
+  `@accept_label`, `@show_decline`, `@decline_label`, `@policy_label`, `@policy_page`,
+  `@policy_url`, `@position`, `@theme` for the banner) or the user's settings stop
+  affecting the design (the editors flag such dead settings). The banner's consent script
+  lives in its `js` field — keep the `data-bs-consent="accepted|declined"` buttons and the
+  `#bs-cookie-consent` wrapper id when restyling, or consent stops being recorded.
+- Their **content** (menu items, buttons, footer link columns, banner text and toggles) is
+  edited via `get_builtin_content` / `update_builtin_content` (kind `"navigation"`,
+  `"footer"`, or `"cookie_consent"`) — NOT by writing props_schema. `get_builtin_content`
+  returns the current values plus the authoritative props_schema (valid keys and select
+  options); `update_builtin_content` merges a values JSON object and applies LIVE
+  immediately (use a staging site to stage menu changes). Users edit the same values in
+  the app at /app/navigation, /app/footer, and /app/cookie-consent.
+- Duplicating a builtin yields an ordinary, unprotected component.
+
+### Cookie consent values
+
+`enabled` (bool), `message` (text), `accept_label`, `show_decline` (bool), `decline_label`,
+`policy_label`, `policy_page` (a page ID) **or** `policy_url`, `position`
+(`bottom` | `bottom-left` | `bottom-right`), `theme` (`dark` | `light`).
+
+Consent is **opt-out**: the site's third-party trackers (GA4/GTM/Meta Pixel) run until a
+visitor declines, then stop from their next page load. BrightSite's own analytics is
+cookieless and unaffected either way, so it keeps working regardless of the banner.
+
+## Site-wide template helpers
+
+Available in any tenant template (pages, layouts, components):
+
+- `@site` — site identity: `name`/`title`, `tagline`, `logo_url`, `phone`, `email`,
+  `address_street`, `address_city`, `address_state`, `address_zip`, `address_country`,
+  `social_profiles` (list of URLs). Prefer these over hardcoding contact details, so
+  editing Site Identity updates every page.
+- `social_icon(url)` — brand SVG for a social profile URL (raw, safe to interpolate).
+- `social_name(url)` — the platform's display name for that URL (e.g. "Instagram").
+  Both are backed by the same platform list Site Identity writes, so pair them with
+  `@site[:social_profiles]` rather than hand-rolling a URL-to-icon `case`.
+
 ## Tools used
 
 - `mcp__brightsite__create_page` / `mcp__brightsite__update_page` — author pages; put
@@ -148,6 +205,9 @@ non-empty `props_schema`.
   to layout content.
 - `mcp__brightsite__get_page` / `mcp__brightsite__get_component` — re-fetch to verify
   markers and a non-empty `props_schema` before reporting done.
+- `mcp__brightsite__get_builtin_content` / `mcp__brightsite__update_builtin_content` — read
+  and write builtin CONTENT (kind `navigation` | `footer` | `cookie_consent`). Always get
+  before update; the response carries the valid keys and select options.
 
 ## Uploading images to the media library
 

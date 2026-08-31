@@ -651,3 +651,20 @@ Authored against the BrightSite server as of this writing. Key code paths:
 `order` sort, empty-`props_schema` gate); `mcp/server.ex` (`create_component` /
 `update_component` / `create_page` tool params). If a field is renamed in the MCP schema,
 treat that as the higher authority and flag it.
+
+## Builtin components (navigation / footer / cookie consent)
+
+Components with `builtin_kind` set (`"navigation"`, `"footer"`, `"cookie_consent"`) are
+system builtins: undeletable, with system-managed `name`/`slug`/`props_schema`
+(`update_component` rejects changes to those with `builtin_locked_fields`; unchanged
+round-trips are accepted). Their HEEx/CSS/JS remain editable. Their content — menu items,
+footer link columns, cookie banner text and toggles — lives in the props_schema defaults
+and is edited via `get_builtin_content`/`update_builtin_content` (or the app's dedicated
+Navigation / Footer / Cookie Consent editors) — never by writing props_schema directly. Do
+not flag a builtin's schema as an editability problem or attempt to rewrite it — it is
+already wired to the dedicated editors.
+
+Layouts render the menu and footer with `builtin("navigation")` / `builtin("footer")`. The
+cookie consent banner is different: it is **injected automatically into every rendered
+page** when its `enabled` value is true, so it needs no layout reference. Never add
+`builtin("cookie_consent")` to a layout, and do not flag a layout for "missing" it.

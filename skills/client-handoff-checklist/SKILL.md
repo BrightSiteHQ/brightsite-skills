@@ -36,7 +36,8 @@ Run through every check below. For each, report `[OK]`, `[WARN]`, or `[FAIL]` an
 - `[WARN]` if `business_description` is missing
 - `[WARN]` if `email` or `phone` is missing (clients usually want at least one contact method)
 - For local businesses: `[WARN]` if address fields are missing or `geo_lat`/`geo_lng` is null
-- `[WARN]` if `social_profiles` is empty
+- `[WARN]` if `social_profiles` is empty — these feed both structured data and the footer's
+  social icons, so an empty list renders as a missing footer region, not just a metadata gap
 
 ### 2. Pages (`mcp__brightsite__list_pages` + `mcp__brightsite__get_page` on each)
 
@@ -86,12 +87,32 @@ The returned rows expose the HTTP status as `status_code` (integer), so filter o
 - `[OK]` if any data exists (means tracking is firing)
 - `[WARN]` if `total_page_views: 0` over the last 7 days — either it's pre-launch (fine) or tracking isn't wired up (bad)
 
-### 9. Global code (`mcp__brightsite__get_global_code`)
+### 9. Cookie consent (`mcp__brightsite__get_builtin_content` with `kind: "cookie_consent"`)
+
+The banner is off by default and, once enabled, appears on every page automatically (no
+layout change needed). Consent is opt-out: the site's third-party trackers (GA4/GTM/Meta
+Pixel) run until a visitor declines. BrightSite's own analytics is cookieless and runs
+either way.
+
+- `[WARN]` if `enabled` is false while the account has any of `ga4_measurement_id`,
+  `gtm_container_id`, or `facebook_pixel_id` set (from step 8's tracking settings) — those
+  set third-party cookies, and a site serving EU/UK/California visitors is expected to
+  offer a choice. Say plainly that this is the client's legal call, not a technical defect.
+- When `enabled` is true:
+  - `[WARN]` if `message` is still the shipped default ("We use cookies to improve your
+    experience and analyze site traffic.") — most clients want their own wording
+  - `[WARN]` if neither `policy_page` nor `policy_url` is set (no privacy policy link)
+  - `[FAIL]` if `policy_page` points at a page ID that no longer exists, or is a page whose
+    `status` is `draft` (link to a page visitors can't see)
+  - `[WARN]` if `show_decline` is false — an accept-only banner is not a real choice and
+    fails most consent regimes
+
+### 10. Global code (`mcp__brightsite__get_global_code`)
 
 - `[WARN]` if `css_staged`, `js_staged`, or `tailwind_config_staged` differ from published versions (staged but unpublished global code)
 - `[OK]` otherwise
 
-### 10. Production-readiness final pass
+### 11. Production-readiness final pass
 
 - `[FAIL]` if any page or post still has placeholder text. Reuse the `heex`/`heex_staged` (pages) and `content`/`content_staged` (posts) strings already fetched in steps 2 and 5 — do NOT call any write tools. Scan BOTH live and staged versions; staged placeholder text will go live the next time the user publishes. Substrings to flag (case-insensitive): `"lorem ipsum"`, `"TODO"`, `"FIXME"`, `"test test"`, `"placeholder"`, `"xxx"` as a standalone token. Report the entity ID, which version (live vs staged), and the matched substring so the user can locate it in the editor.
 
@@ -156,4 +177,4 @@ Ship it.
 - `mcp__brightsite__get_analytics`
 - `mcp__brightsite__get_global_code`
 
-This skill is **read-only**. It never calls a write tool. The placeholder-text check in step 10 runs against content already loaded into context — it does not call `search_replace` or any other mutating tool.
+This skill is **read-only**. It never calls a write tool. The placeholder-text check in step 11 runs against content already loaded into context — it does not call `search_replace` or any other mutating tool.
