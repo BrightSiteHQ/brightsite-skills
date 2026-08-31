@@ -172,6 +172,36 @@ cookie consent banner — marked with `builtin_kind` (`"navigation"` / `"footer"
   the app at /app/navigation, /app/footer, and /app/cookie-consent.
 - Duplicating a builtin yields an ordinary, unprotected component.
 
+### Navigation values
+
+`items` (menu entries), `buttons` (list of `{label, page|url, new_tab, style: solid|outline}`),
+`layout` (`links-right` | `links-center` | `links-left` | `stacked`), `show_logo` (bool),
+`dropdown_style` (`dropdown` | `mega`), `sticky` (bool).
+
+**Menu nesting — three levels, no more.** A top-level item's `children` are its dropdown
+entries. Each dropdown entry is one of two kinds:
+
+- a plain **link** (the default, or `type: "link"`) — `{label, page|url, new_tab}`
+- a **section** (`type: "section"`) — a heading whose own `children` are that section's
+  links. Sections are how a mega menu gets its labelled columns. A section is not
+  clickable, so give it no page/url, and it is the last level: its links take no children.
+  A section must have at least one link.
+
+A section may also carry `image` (a media file ID) — an optional picture rendered **above**
+its heading, for image-led menu columns. Omit it (or `""`) for a plain text column.
+
+**Mega-menu panel** — optional, on TOP-LEVEL items only, all default `""` and render
+nothing when empty: `promo_image` (media file ID), `promo_label` (e.g. "MOST POPULAR"),
+`promo_link_label` (e.g. "VIEW ALL SERVICES"), `promo_page` **or** `promo_url`.
+Set `dropdown_style` to `"mega"` for the full-width panel these are designed for.
+
+### Footer values
+
+`columns` (list of `{title, links: [{label, page|url, new_tab}]}`), `layout`
+(`columns` | `brand` | `centered` | `minimal`), `show_logo` (bool), `copyright` (text,
+`""` = automatic), `social_style` (`icon` | `icon_text` | `text` | `hidden`). Footer social
+ACCOUNTS come from site identity (`update_site_identity` `social_profiles`), not from here.
+
 ### Cookie consent values
 
 `enabled` (bool), `message` (text), `accept_label`, `show_decline` (bool), `decline_label`,
