@@ -1,7 +1,7 @@
 {
   "name": "brightsite-skills",
   "description": "Skills for agencies running client sites on BrightSite: WordPress migration, programmatic SEO, bulk SEO audits, redirect imports, pre-launch QA, blog drafting, authoring/auditing visual-editor-editable content, staging-site redesign workflows, and building Supabase-backed auth-gated portals. Calls the hosted BrightSite MCP.",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "author": {
     "name": "BrightSite",
     "url": "https://onbrightsite.com"

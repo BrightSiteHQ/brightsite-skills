@@ -259,3 +259,18 @@ Gotchas: use a `.jpg` extension, never `.jpeg` (the CDN signed-URL pipeline 404s
 `.jpeg` objects). Resize huge originals (3500px+) down to ~1400–2000px before the PUT so
 uploads stay fast. For blog feature images, the same `id` is what you pass as
 `feature_image_id` (preferred over `feature_image_url`, which is for external URLs).
+
+## Images in email (newsletters, transactional templates)
+
+CDN image URLs negotiate their format on the `Accept` header: browsers get WebP, other
+clients get the source format. Gmail's image proxy advertises WebP support and then
+transcodes it to JPEG, flattening transparency onto black — a white-on-transparent logo
+becomes a black box. So an email must never receive a negotiated URL.
+
+- From `mcp__brightsite__list_media` / `complete_upload`, use the **`email_url`** field:
+  the `lg` size with the format pinned inside the signed path (PNG, or JPEG when the
+  source is a JPEG). Never WebP, alpha preserved. `md_url` / `lg_url` are for web pages.
+- In HEEx, pin explicitly: `media(file_id, format: "png")` or
+  `media_url(file_id, format: "png")`. Accepted formats: `png`, `jpeg`, `webp`, `gif`,
+  `avif`. An unknown value renders a visible `media-error` span rather than an image.
+- Photos can stay JPEG; only assets with transparency need PNG.
