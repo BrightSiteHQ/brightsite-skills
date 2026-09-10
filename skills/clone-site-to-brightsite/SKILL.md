@@ -528,7 +528,10 @@ front of you, rather than discovering it in Phase 5 or having the user find it:
       three most visible: font size, tracking, colour)
 - [ ] Nothing was invented — no icon, link or block the source does not have
 - [ ] Nothing moved between regions relative to the source
-- [ ] Screenshot the section on both sides and compare the two images
+- [ ] Screenshot the section on **both** sides and read **both** images
+- [ ] Section height matches the source's (a taller section means spacing drift)
+- [ ] Text wraps to the same number of lines — same width and same wrap means
+      the type metrics match; a different wrap at the same width means they do not
 
 That fourth box is the one that keeps being missed. Reorganising the source's
 content because the new arrangement seems tidier is not cloning it.
@@ -548,6 +551,23 @@ Create redirects for any source path whose shape changed.
 source *and* the clone and diff the results. A single-sided check — "the nav
 rendered", "no broken images" — tells you the page is not crashing, which is not
 the question.
+
+**Looking at your own output is not a comparison.** Cropping your page,
+inspecting it, and judging it "looks right" is the single most common way a
+clone ships wrong — you are checking it against your memory of the source, and
+your memory is of what you built. The two images must be in front of you, one
+after the other, at the same viewport and the same crop.
+
+The procedure, exactly:
+
+```bash
+agent-browser set viewport 1440 900
+agent-browser open "<source-url>";     agent-browser screenshot /abs/shots/cmp_src.png  --full
+agent-browser open "<brightsite-url>"; agent-browser screenshot /abs/shots/cmp_mine.png --full
+# crop the SAME y-range out of both, then read both files
+```
+
+Then read **both** crops. If you only read one, you have not compared anything.
 
 Screenshot your page and the source at the same viewport, then **look at both**.
 
@@ -718,6 +738,12 @@ three rounds, then report whatever still differs rather than looping forever.
 - **Do not force a child's position to match a number.** Positions come from
   the container and the spacing; overriding a child hides the real difference
   and breaks the overall proportions.
+- **Do not "verify" by looking at your own output alone.** Reading one crop and
+  calling it a match is not a comparison; it is a recollection. Read the source
+  crop and yours, in the same turn.
+- **Do not stop at the values you set.** A paragraph rendering at 15px when the
+  spec says 16px means an earlier rule is winning. Read the *computed* value
+  back, not the declaration you wrote.
 - **Do not extract by tag list.** `h2`/`h3`/`p` silently drops icons,
   subtitles, dividers and buttons. Enumerate everything the section renders.
 - **Do not assume a font seen in the stylesheet is used where you expect.** A
