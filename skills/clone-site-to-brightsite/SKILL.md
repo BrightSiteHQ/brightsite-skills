@@ -89,8 +89,21 @@ blocks — that is where the real palette is.
 
 Static screenshots hide half of a page. Before specifying anything:
 
-- **Scroll** slowly top to bottom. Does the header change? Do sections animate
-  in? Is there a carousel advancing on its own?
+- **Scroll** slowly top to bottom, and watch for each of these — the list is
+  not exhaustive, and anything the page does that is not on it still counts:
+  - a header that shrinks, changes background or gains a shadow past a threshold
+  - elements animating into view on entry (fade-up, slide-in, stagger delays)
+  - `scroll-snap-type` on a container
+  - parallax layers, or a **pinned backdrop the content scrolls over**
+  - scroll-driven progress bars or opacity transitions
+  - a sidebar or tab indicator that switches by itself as content passes
+    (IntersectionObserver, *not* click handlers)
+  - a smooth-scroll library — check for `.lenis` or `.locomotive-scroll`;
+    default browser scrolling feels obviously different
+  - `animation-timeline` in the CSS
+  - an auto-advancing carousel: **wait several seconds without touching
+    anything**, because a carousel and a static photo are identical in a
+    screenshot
 - **Hover** over nav items, buttons, cards. Record what changes.
 - **Click** anything that looks interactive — tabs, pills, arrows. Record the
   content of *each* state, not just the default.
@@ -103,7 +116,33 @@ from one screenshot.
 ### Page topology
 
 List every section top to bottom with a working name, its height, and whether
-it is flow content or a fixed overlay:
+it is flow content or a fixed overlay.
+
+**Measure the height against the viewport, not in isolation.** A section that
+reports 900px at a 900px viewport is almost certainly `100vh`, and hardcoding
+900px breaks on every other screen. Load the page at two viewport heights and
+compare:
+
+```javascript
+JSON.stringify({vh: window.innerHeight,
+  hero: Math.round(document.querySelector('SECTION').getBoundingClientRect().height)})
+```
+
+Same number at both heights → a fixed pixel height. Tracks the viewport →
+`100vh`.
+
+**Check `position` on the section's children, not only the section.** A hero
+whose section is `position: relative` can contain a `position: fixed` slider —
+that is a pinned backdrop the page scrolls over, and it is invisible in both a
+screenshot and a section-level style dump:
+
+```javascript
+JSON.stringify([...document.querySelectorAll('SECTION *')]
+  .map(e => ({cls:(e.className||'').toString().slice(0,40), pos:getComputedStyle(e).position}))
+  .filter(x => x.pos === 'fixed' || x.pos === 'sticky'))
+```
+
+Then list the topology:
 
 ```javascript
 JSON.stringify([...document.querySelectorAll('body section, body > div > section')]
@@ -291,6 +330,32 @@ Array.from(document.images).map(i => ({src: i.currentSrc, ok: i.naturalWidth > 0
 document.body.innerText.includes('No products yet')
 ```
 
+**A screenshot of the top of the page proves almost nothing.** Two failures
+survive it every time, so test them explicitly:
+
+*Viewport-relative height* — screenshot at 1440x900 and again at 1440x700, and
+compare the hero height to `window.innerHeight` in both. A hero hardcoded to
+900px looks perfect in a 900px-tall screenshot and is wrong on every other
+screen:
+
+```javascript
+JSON.stringify({vh: window.innerHeight,
+  hero: Math.round(document.querySelector('.hero').getBoundingClientRect().height)})
+```
+
+*Scroll behaviour* — scroll past the first section and re-measure. If the source
+pins a backdrop, its rect stays at top 0 while `scrollY` grows. Compare the same
+two numbers on the source and on the clone:
+
+```javascript
+// after: agent-browser scroll down 700
+(function(){ const r = document.querySelector('.hero-backdrop').getBoundingClientRect();
+  return JSON.stringify({scrollY: Math.round(window.scrollY),
+                         top: Math.round(r.top), pinned: Math.abs(r.top) < 2}); })()
+```
+
+Take the comparison screenshots **scrolled**, not only at the top.
+
 For each difference: fix the HEEx or CSS, republish, re-screenshot. Cap at about
 three rounds, then report whatever still differs rather than looping forever.
 
@@ -325,4 +390,10 @@ three rounds, then report whatever still differs rather than looping forever.
   identity.
 - **Do not build a section as a component just because it is big.** Components
   are for things that repeat.
+- **Do not hardcode a height that is really `100vh`.** Measure at two viewport
+  heights before writing a pixel value.
+- **Do not extract only the section element.** Its children carry `position:
+  fixed`/`sticky`, which is where pinned backdrops and parallax live.
+- **Do not verify only the top of the page.** Scroll past the first section and
+  compare again; a fixed backdrop and a normal one look identical until you do.
 - **Do not report success on a page you have not looked at.**
