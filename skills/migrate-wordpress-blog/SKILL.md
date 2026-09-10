@@ -22,6 +22,16 @@ Take a WordPress WXR export file and import the blog into BrightSite. The goal: 
 5. **Image handling** — do they want images re-hosted on BrightSite media (slower, fully migrated) or left pointing at the WP URLs (faster, but breaks when WP is taken down)? **Recommend re-hosting.**
 6. **Draft confirmation** — this skill imports as `draft` only so the user can spot-check before going live.
 
+## Visual fidelity is a separate skill
+
+This skill moves blog *content*. It does not reproduce the old site's design.
+
+If the user also wants the site to look like the WordPress original — which is
+usually what "migrate my site" means to them — run the
+**clone-site-to-brightsite** skill for the layout, theme and pages, then run
+this one for the posts. Ask which they want before starting; importing 400
+posts into a site that looks nothing like the old one is rarely the job.
+
 ## Workflow
 
 ### Step 1: Parse the WXR
