@@ -355,13 +355,27 @@ own nav takes that away. Populate them over MCP with
 Extract the **full** menu from the source — every item, in order. A menu that is
 missing entries is the same failure as a section built from memory.
 
-**Know what the builtins cannot express.** The nav takes items, buttons, a logo
-and a sticky flag; it has no slot for a search icon or a cart badge. The footer
-builtin takes a copyright line and simple columns; it cannot do WooCommerce-style
-widget columns with product thumbnails and prices. When the source needs more
-than the builtin offers, say so and rebuild that piece as a page section — but
-check the builtin first, and never replace one just because styling it looked
-easier.
+**Know what the builtins cannot express, and what the helpers can.** The nav
+builtin takes items, buttons, a logo and a sticky flag; it has no slot for a
+search icon, an account link or a cart badge. That does **not** mean the site
+cannot have them — the storefront template helpers do:
+
+| helper | gives you |
+|---|---|
+| `cart_url()` | the cart page URL |
+| `cart_count()` | items in this viewer's cart, `0` when empty |
+| `account_url()` | `/account` when signed in, `/account/sign-in` otherwise |
+| `account_label()` | "Sign in" or the customer's name |
+| `commerce?()` | whether this site has a store — wrap the block in it |
+
+Author that cluster in the **layout**, next to `component("navigation")`, the
+way the starter storefront layout does. Check an existing storefront site's
+layout before concluding a thing is impossible.
+
+The footer builtin takes a copyright line and simple columns; it cannot do
+WooCommerce-style widget columns with product thumbnails and prices, so that one
+does need rebuilding as a section. Check the builtin first, and never replace one
+just because styling it looked easier.
 
 ### Chrome lives in the layout, not the page
 
@@ -554,6 +568,9 @@ three rounds, then report whatever still differs rather than looping forever.
   and check fixed layers separately.
 - **Do not hand-roll a nav or footer before checking the builtins.** They are
   what the client edits; replacing them silently removes that.
+- **Do not conclude a builtin "cannot do X" without checking the helpers and an
+  existing storefront layout.** A cart badge and account link are helper calls,
+  not missing features.
 - **Do not ship a partial menu.** Extract every item from the source, in order.
 - **Do not let a blanket background rule repaint a dark section.**
 - **Do not treat "the element exists" as "the element is visible."** Hit-test
