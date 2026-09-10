@@ -320,6 +320,15 @@ Either way, wrap the section in `data-bs-section="Label"` so it groups into one
 collapsible node in the visual editor's element tree. A long page without
 grouping is unusable for the client.
 
+### A blanket background rule will repaint your dark sections
+
+Giving everything after a pinned hero an opaque background is how you stop the
+backdrop showing through — but a rule like
+`main > *:not(.hero) { background: #fff }` also repaints a dark footer or any
+other dark section that lives inside the page. The text stays the colour you set
+and becomes invisible. Re-assert the background on every section that is not the
+page's default colour.
+
 ### Chrome lives in the layout, not the page
 
 Nav and footer are rendered by the layout, outside the page's HEEx. A wrapper
@@ -450,8 +459,22 @@ A transparent margin between them shows the backdrop through:
 })()
 ```
 
-**Scroll to the bottom of the page and screenshot that too.** The footer is the
-region most often broken and least often looked at.
+**Use a full-page screenshot** (`agent-browser screenshot <path> --full`).
+A viewport screenshot captures whatever scroll position the screenshot process
+happens to be at, which is *not* necessarily where a separate `eval` call
+scrolled to — measurements and pixels can disagree, and the pixels are right.
+A full-page capture removes the question. The footer is the region most often
+broken and least often looked at.
+
+Two caveats on the full-page capture: `position: fixed` layers (a pinned hero,
+a fixed nav) do not composite into it, so the hero reads as blank and the nav
+appears mid-page. Verify those from the viewport screenshot instead.
+
+**When a measurement and a screenshot disagree, believe the screenshot.**
+`getComputedStyle` reporting a visible colour proves the rule matched, not that
+the element is legible: white text on a background that another rule repainted
+white measures perfectly and reads as nothing. Sample the actual pixels where
+the element should be if you need certainty.
 
 Take the comparison screenshots **scrolled**, not only at the top.
 
@@ -493,6 +516,9 @@ three rounds, then report whatever still differs rather than looping forever.
   heights before writing a pixel value.
 - **Do not extract only the section element.** Its children carry `position:
   fixed`/`sticky`, which is where pinned backdrops and parallax live.
+- **Do not trust a viewport screenshot's scroll position.** Capture full-page,
+  and check fixed layers separately.
+- **Do not let a blanket background rule repaint a dark section.**
 - **Do not treat "the element exists" as "the element is visible."** Hit-test
   it; a pinned backdrop hides regions that query perfectly.
 - **Do not verify only the top of the page.** Scroll past the first section and
