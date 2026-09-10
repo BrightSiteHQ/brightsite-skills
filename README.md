@@ -57,7 +57,14 @@ The final layout should be:
 ~/.claude/skills/visual-editor-audit/SKILL.md
 ~/.claude/skills/staging-redesign/SKILL.md
 ~/.claude/skills/supabase-portal/SKILL.md
+~/.claude/skills/clone-site-to-brightsite/SKILL.md
+~/.claude/skills/clone-site-to-brightsite/commerce-catalog.md
+~/.claude/skills/migrate-woocommerce-store/SKILL.md
 ```
+
+Skills with more than one file load the extra ones on demand, so copy the whole
+directory — a missing `commerce-catalog.md` or `editability-contract.md` fails
+only at the point the workflow needs it.
 
 For project-local manual installs, copy individual skill directories (not just the `SKILL.md` files) into your project's `.claude/skills/` directory.
 

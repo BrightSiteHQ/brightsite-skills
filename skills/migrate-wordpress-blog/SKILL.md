@@ -22,15 +22,30 @@ Take a WordPress WXR export file and import the blog into BrightSite. The goal: 
 5. **Image handling** — do they want images re-hosted on BrightSite media (slower, fully migrated) or left pointing at the WP URLs (faster, but breaks when WP is taken down)? **Recommend re-hosting.**
 6. **Draft confirmation** — this skill imports as `draft` only so the user can spot-check before going live.
 
-## Visual fidelity is a separate skill
+## This skill is the posts-only path
 
-This skill moves blog *content*. It does not reproduce the old site's design.
+It moves blog *content* from a WXR export file. It does not reproduce the old
+site's design, and it does not set up the blog's listing, card or post
+templates.
 
-If the user also wants the site to look like the WordPress original — which is
-usually what "migrate my site" means to them — run the
-**clone-site-to-brightsite** skill for the layout, theme and pages, then run
-this one for the posts. Ask which they want before starting; importing 400
-posts into a site that looks nothing like the old one is rarely the job.
+**Most "migrate my site" requests are not this job.** They mean the site should
+look like the original too — and that is **clone-site-to-brightsite**, which
+fingerprints the source, clones the design, rebuilds the blog properly
+(listing, post card, post template, settings) and imports the posts. Start
+there unless the user specifically wants posts only.
+
+Use this skill when:
+
+- The client wants their posts moved but is keeping or redesigning the site's
+  look, so there is no source design to match.
+- WordPress is already switched off. This works from the export file alone;
+  cloning needs a live page to measure.
+- The clone skill sent you here because the user has a WXR export — it hands
+  off for exactly this, since parsing WXR, stripping Gutenberg comments and
+  converting shortcodes is not something to re-derive from a rendered page.
+
+Either way the blog's **design** comes from the clone skill. This one fills it
+with posts.
 
 ## Workflow
 
