@@ -475,6 +475,26 @@ two numbers on the source and on the clone:
                          top: Math.round(r.top), pinned: Math.abs(r.top) < 2}); })()
 ```
 
+*The region matches element for element.* Screenshot the same region on both
+sides and compare the two images directly — this is the check that catches a
+missing menu item, an icon that exists only in your version, or a badge with the
+wrong shape. Verifying that "the nav renders" is not verifying that the nav
+matches.
+
+For any region with a fixed set of parts (a menu, an icon row, a footer column
+set), enumerate both sides and diff the lists:
+
+```javascript
+// run on the SOURCE, then on the CLONE, and compare the output
+JSON.stringify({
+  menu: [...document.querySelectorAll("NAV_SELECTOR a")].map(a => a.textContent.trim()),
+  icons: document.querySelectorAll("NAV_SELECTOR svg, NAV_SELECTOR i").length
+})
+```
+
+Counts that differ are the bug. Do not reconcile them by reasoning about what
+seems right — the source list is the answer.
+
 *Every region is present AND visible* — an element can render correctly and
 still be invisible because something paints over it. `querySelector` finding it
 is not proof. Hit-test the middle of each major region and confirm the topmost
@@ -568,6 +588,11 @@ three rounds, then report whatever still differs rather than looping forever.
   and check fixed layers separately.
 - **Do not hand-roll a nav or footer before checking the builtins.** They are
   what the client edits; replacing them silently removes that.
+- **Do not add an element the source does not have.** A clone with an extra
+  account icon is as wrong as one missing a menu item, and it is easier to miss
+  because nothing looks broken.
+- **Do not move an item between regions.** If the source puts "My Account" in
+  the menu, it goes in the menu — not into an icon row because that felt tidier.
 - **Do not conclude a builtin "cannot do X" without checking the helpers and an
   existing storefront layout.** A cart badge and account link are helper calls,
   not missing features.
