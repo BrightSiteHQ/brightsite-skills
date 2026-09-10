@@ -252,6 +252,47 @@ Sequential, and everything else depends on it.
 For each section in the topology, extract → write a spec → build. Do not skip
 the spec: it is what stops a section being built from memory.
 
+### Enumerate every element in the section — do not extract by tag list
+
+The fastest way to lose content is to extract "the headings and paragraphs" and
+never notice what else was there. A section rebuilt from `h2`/`h3`/`p` silently
+drops icons, italic subtitles, dividers, badges and buttons, and the result
+looks tidy enough that nothing flags it.
+
+Walk the section and list **every** element that renders something, then account
+for each one:
+
+```javascript
+(function (sel) {
+  const root = document.querySelector(sel), out = [];
+  root.querySelectorAll("*").forEach(e => {
+    const r = e.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2) return;
+    const own = [...e.childNodes]
+      .filter(n => n.nodeType === 3 && n.textContent.trim()).map(n => n.textContent.trim()).join(" ");
+    const cs = getComputedStyle(e), before = getComputedStyle(e, "::before").content;
+    if (own || e.tagName === "IMG" || e.tagName === "SVG" ||
+        (before && before !== "none" && before !== '""'))
+      out.push({tag: e.tagName, cls: (e.className || "").toString().slice(0, 40),
+                text: own.slice(0, 60), pseudo: before,
+                font: cs.fontFamily.split(",")[0], size: cs.fontSize, style: cs.fontStyle});
+  });
+  return JSON.stringify(out, null, 1);
+})('SECTION_SELECTOR')
+```
+
+Two things this catches that a tag-list extraction cannot:
+
+- **Icon fonts.** An icon may be a `<span>` whose glyph comes from a
+  `::before` on a webfont (ElegantIcons, FontAwesome). It has no text, no
+  `<img>` and no `<svg>` — it is invisible to any selector you would think to
+  write. The `pseudo` field above is what reveals it. Reproduce it as inline
+  SVG at the measured size and colour; do not try to load the icon font.
+- **Text in unexpected elements.** A subtitle may be a bare `<div>`, not a
+  `<p>`. Its font is worth reading on its own: a serif italic line inside an
+  otherwise sans-serif section is a deliberate choice, and it is the sort of
+  detail that makes a clone feel right.
+
 ### Measure the container before anything inside it
 
 Extract the section's **layout container** first — its width, max-width, padding
@@ -677,6 +718,10 @@ three rounds, then report whatever still differs rather than looping forever.
 - **Do not force a child's position to match a number.** Positions come from
   the container and the spacing; overriding a child hides the real difference
   and breaks the overall proportions.
+- **Do not extract by tag list.** `h2`/`h3`/`p` silently drops icons,
+  subtitles, dividers and buttons. Enumerate everything the section renders.
+- **Do not assume a font seen in the stylesheet is used where you expect.** A
+  display serif may appear on exactly one italic subtitle and nowhere else.
 - **Do not check only endpoints.** Matching the first and last element while the
   span between them differs means the spacing is wrong.
 - **Do not add an element the source does not have.** A clone with an extra
