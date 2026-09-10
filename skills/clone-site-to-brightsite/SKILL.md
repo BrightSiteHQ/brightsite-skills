@@ -329,6 +329,40 @@ other dark section that lives inside the page. The text stays the colour you set
 and becomes invisible. Re-assert the background on every section that is not the
 page's default colour.
 
+### Use the builtin navigation and footer
+
+BrightSite ships **builtin components** for site chrome, and the layout should
+embed them:
+
+```
+{component("navigation")}
+{@inner_content}
+{component("site-footer")}
+```
+
+They are what the client edits in the dashboard, so a clone that hand-rolls its
+own nav takes that away. Populate them over MCP with
+`update_builtin_content` (the param is `values`, not `props`):
+
+```json
+{"kind": "navigation",
+ "values": {"show_logo": true, "sticky": true,
+   "items": [{"label": "Home", "page": "<page-id>", "url": "", "children": []},
+             {"label": "Shop", "page": "", "url": "/collections/x", "children": []}]}}
+```
+
+`page` for an internal page (survives slug changes), `url` for anything else.
+Extract the **full** menu from the source — every item, in order. A menu that is
+missing entries is the same failure as a section built from memory.
+
+**Know what the builtins cannot express.** The nav takes items, buttons, a logo
+and a sticky flag; it has no slot for a search icon or a cart badge. The footer
+builtin takes a copyright line and simple columns; it cannot do WooCommerce-style
+widget columns with product thumbnails and prices. When the source needs more
+than the builtin offers, say so and rebuild that piece as a page section — but
+check the builtin first, and never replace one just because styling it looked
+easier.
+
 ### Chrome lives in the layout, not the page
 
 Nav and footer are rendered by the layout, outside the page's HEEx. A wrapper
@@ -518,6 +552,9 @@ three rounds, then report whatever still differs rather than looping forever.
   fixed`/`sticky`, which is where pinned backdrops and parallax live.
 - **Do not trust a viewport screenshot's scroll position.** Capture full-page,
   and check fixed layers separately.
+- **Do not hand-roll a nav or footer before checking the builtins.** They are
+  what the client edits; replacing them silently removes that.
+- **Do not ship a partial menu.** Extract every item from the source, in order.
 - **Do not let a blanket background rule repaint a dark section.**
 - **Do not treat "the element exists" as "the element is visible."** Hit-test
   it; a pinned backdrop hides regions that query perfectly.
