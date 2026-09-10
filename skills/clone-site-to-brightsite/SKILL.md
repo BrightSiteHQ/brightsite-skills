@@ -18,9 +18,30 @@ Methodology adapted from the MIT-licensed
 
 ## The rule that matters most
 
-**You have not finished until you have looked at your own output next to the
-original.** A page that renders without errors is not a page that matches. Phase
-5 is not optional, and the report must state what still differs.
+**Every check asks "does this match the source?", never "does this render?"**
+
+That distinction is the whole job. A page that renders without errors, with no
+broken images, no console noise and every section present, can still be wrong in
+every way that matters: a menu missing an item, an icon the source never had, a
+badge the wrong shape, a heading at 13px where the source is 11px. "It renders"
+passes on all of those. "It matches" does not.
+
+So a check is only worth running if it can fail while the page looks fine. In
+practice that means: measure the source, measure the clone, compare the two
+numbers. A check with only one side is not verification.
+
+Concretely — never write the check on the left; write the one on the right:
+
+| Not this | This |
+|---|---|
+| the nav has links | the nav has *the same links, in the same order*, as the source |
+| the badge renders | the badge is 14x14, `rgb(229,229,229)`, radius 2px — as measured |
+| the hero has a photo | the hero is `100vh` with a pinned backdrop, like the source |
+| the footer is visible | the footer has *the same three columns* with the same items |
+
+You have not finished until you have put your output next to the original and
+compared them. Phase 5 is not optional, and the report must state what still
+differs.
 
 ## Pre-flight
 
@@ -420,6 +441,22 @@ If you cannot tick one, go back and extract more.
 - [ ] Text is verbatim, not paraphrased
 - [ ] `data-bs-edit` fields and any collections are planned
 
+### After you build a section, before you move on
+
+Extraction checks are not enough — everything above can pass and the built
+section still not match. Diff it against the source now, while the spec is in
+front of you, rather than discovering it in Phase 5 or having the user find it:
+
+- [ ] The element list matches: same items, same order, nothing added
+- [ ] Every value in the spec appears in the built section (spot-check the
+      three most visible: font size, tracking, colour)
+- [ ] Nothing was invented — no icon, link or block the source does not have
+- [ ] Nothing moved between regions relative to the source
+- [ ] Screenshot the section on both sides and compare the two images
+
+That fourth box is the one that keeps being missed. Reorganising the source's
+content because the new arrangement seems tidier is not cloning it.
+
 ## Phase 4: Assembly
 
 Create or update each page (`create_page` / `update_page`), assign the layout,
@@ -430,6 +467,11 @@ Delete leftover starter pages that are not part of the source site.
 Create redirects for any source path whose shape changed.
 
 ## Phase 5: Visual QA — mandatory
+
+**Every check in this phase compares two sides.** Run each one against the
+source *and* the clone and diff the results. A single-sided check — "the nav
+rendered", "no broken images" — tells you the page is not crashing, which is not
+the question.
 
 Screenshot your page and the source at the same viewport, then **look at both**.
 
@@ -442,14 +484,23 @@ agent-browser open "<brightsite-url>"; agent-browser screenshot /abs/shots/mine.
 Read both images. Compare top to bottom: hero treatment, nav, type scale and
 tracking, section order, spacing, imagery. Repeat at 390.
 
-Then run the checks a screenshot can miss:
+Then run the checks a screenshot can miss. **Run each on the source first, then
+on the clone, and compare** — the source's numbers are the target, not zero and
+not "some":
 
 ```javascript
-// broken images — naturalWidth 0 means it failed to load
-Array.from(document.images).map(i => ({src: i.currentSrc, ok: i.naturalWidth > 0}))
-// empty content regions
-document.body.innerText.includes('No products yet')
+// Run on BOTH. Every count should match the source's count.
+JSON.stringify({
+  brokenImages: [...document.images].filter(i => !i.naturalWidth).length, // clone: 0
+  images:       document.images.length,        // must match the source
+  navLinks:     [...document.querySelectorAll("header nav a")].map(a => a.textContent.trim()),
+  sections:     document.querySelectorAll("main > *").length,
+  h2s:          [...document.querySelectorAll("h2")].map(h => h.textContent.trim())
+})
 ```
+
+A clone with fewer images, fewer sections or a shorter heading list than the
+source is missing content, however cleanly it renders.
 
 **A screenshot of the top of the page proves almost nothing.** Two failures
 survive it every time, so test them explicitly:
