@@ -252,6 +252,41 @@ Sequential, and everything else depends on it.
 For each section in the topology, extract → write a spec → build. Do not skip
 the spec: it is what stops a section being built from memory.
 
+### Measure the container before anything inside it
+
+Extract the section's **layout container** first — its width, max-width, padding
+and left/right edges — and match that before touching any child:
+
+```javascript
+(function (sel) {
+  const el = document.querySelector(sel), r = el.getBoundingClientRect(),
+        c = getComputedStyle(el);
+  return JSON.stringify({left: Math.round(r.left), right: Math.round(r.right),
+    width: Math.round(r.width), maxWidth: c.maxWidth, padding: c.padding,
+    margin: c.margin, display: c.display, gap: c.gap, justifyContent: c.justifyContent});
+})('SELECTOR')
+```
+
+The container is what positions everything inside it. A 1170px centred container
+puts a logo at x=170 by itself; a full-bleed one puts it at x=30 no matter what
+you do to the logo.
+
+**Never force a child's position to hit a measured number.** If a child is in
+the wrong place, the container or the spacing between siblings is wrong — fix
+that. Overriding a container's `max-width` to make three x-coordinates line up
+produces a nav whose numbers match and whose overall width is visibly wrong,
+because the numbers you checked were the only ones you looked at.
+
+Measure, in this order, and match each before moving down:
+
+1. container edges, width, max-width, padding
+2. spacing between siblings (flex `gap`, per-item padding/margin)
+3. individual element positions — which should now already be right
+
+Also measure the **span** of any repeating row (first item's left edge to last
+item's right edge). A menu whose endpoints match but whose span does not has the
+wrong inter-item spacing, and that is invisible in an endpoint check.
+
 ### Extract
 
 Run the full computed-style walk on the section's container. Store the JSON:
@@ -639,6 +674,11 @@ three rounds, then report whatever still differs rather than looping forever.
   and check fixed layers separately.
 - **Do not hand-roll a nav or footer before checking the builtins.** They are
   what the client edits; replacing them silently removes that.
+- **Do not force a child's position to match a number.** Positions come from
+  the container and the spacing; overriding a child hides the real difference
+  and breaks the overall proportions.
+- **Do not check only endpoints.** Matching the first and last element while the
+  span between them differs means the spacing is wrong.
 - **Do not add an element the source does not have.** A clone with an extra
   account icon is as wrong as one missing a menu item, and it is easier to miss
   because nothing looks broken.
