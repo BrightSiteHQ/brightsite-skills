@@ -46,6 +46,33 @@ original.** A page that renders without errors is not a page that matches. Phase
   cannot be reproduced, say so in the report — do not paper over it with
   plausible-looking filler.
 
+## Guiding principles
+
+**Completeness beats speed.** If any value in a section is guessed — a colour, a
+font size, a padding — extraction was not finished. Spend the extra minute.
+
+**Small pieces, exact results.** Given a whole page at once, you approximate.
+Given one section with measured values, you match it. If a section has several
+distinct sub-parts with their own styling and behaviour, treat them separately.
+
+**Real content, real assets.** Extract the actual text and download the actual
+images. Generate nothing. A clone with placeholder copy is a mockup.
+
+**Foundation first.** Fonts, palette, layout CSS and assets must exist before
+any section is authored. Everything else depends on them.
+
+**Extract how it looks AND how it behaves.** A page is not a screenshot.
+Capture the computed CSS *and* what changes, what triggers the change, and how
+it transitions.
+
+**Identify the interaction model before building.** Building a click-driven UI
+for a scroll-driven section is a rewrite, not a CSS tweak. Scroll and wait
+first; click only after.
+
+**Extract every state, not just the default.** A header at scroll 0 and the
+same header scrolled are two specs. So is a hovered card, or a tab that is not
+currently active.
+
 ## Phase 1: Reconnaissance
 
 Do this before writing a single line of HEEx.
@@ -258,6 +285,14 @@ padding: … / background: … / minHeight: …
 fontFamily: … / fontSize: … / letterSpacing: … / textTransform: … / color: …
 (exact values, from getComputedStyle)
 
+## States & behaviours
+For each: trigger, state A, state B, transition.
+- **Trigger:** scroll past 50px / hover / click on X / auto every N seconds
+- **State A (before):** background: transparent, height: 140px, padding: 15px 0
+- **State B (after):** background: rgba(44,62,80,.9), height: 130px, padding: 10px 0
+- **Transition:** background, padding 0.4s ease-in-out
+Write "N/A" only after checking — even a footer usually has link hover states.
+
 ## Content (verbatim)
 …
 
@@ -285,6 +320,20 @@ Either way, wrap the section in `data-bs-section="Label"` so it groups into one
 collapsible node in the visual editor's element tree. A long page without
 grouping is unusable for the client.
 
+### Chrome lives in the layout, not the page
+
+Nav and footer are rendered by the layout, outside the page's HEEx. A wrapper
+added inside a page therefore does **not** contain them, so any stacking
+context, background or z-index a pinned backdrop needs must be applied to
+`header` and `footer` from the **layout CSS**. Forgetting this is how a footer
+disappears behind a fixed hero while still being present in the DOM.
+
+The builtin nav and footer also ship their own Tailwind utilities (`bg-white`,
+`border-zinc-200`, `mt-24`, an `h-8` logo). Props do not reach those. Override
+them from the layout CSS against the rendered markup, and note the header is
+nested inside LiveView wrapper divs — a `body > header` selector will not match,
+so use a descendant selector.
+
 ### Build it editable
 
 Fidelity is only half the job — the client has to be able to change the thing
@@ -298,6 +347,21 @@ afterwards:
   cards, testimonials) with `:for` in the template. Never hardcode a repeating
   list.
 - Internal links: `href={page_url("id")}` plus `data-bs-edit-type="page"`.
+
+### Before you build a section, check every box
+
+If you cannot tick one, go back and extract more.
+
+- [ ] A spec file exists for this section with every field filled
+- [ ] Every CSS value came from `getComputedStyle()`, none estimated
+- [ ] The interaction model is identified (static / hover / scroll / time)
+- [ ] Heights checked at two viewport heights — is it px or `100vh`?
+- [ ] The section's descendants were swept for `position: fixed` / `sticky`
+- [ ] For stateful elements: both states captured, with the transition
+- [ ] Every image found, including background images and overlays
+- [ ] Responsive behaviour recorded at 1440 and 390
+- [ ] Text is verbatim, not paraphrased
+- [ ] `data-bs-edit` fields and any collections are planned
 
 ## Phase 4: Assembly
 
@@ -354,6 +418,41 @@ two numbers on the source and on the clone:
                          top: Math.round(r.top), pinned: Math.abs(r.top) < 2}); })()
 ```
 
+*Every region is present AND visible* — an element can render correctly and
+still be invisible because something paints over it. `querySelector` finding it
+is not proof. Hit-test the middle of each major region and confirm the topmost
+element there is the one you expect:
+
+```javascript
+(function () {
+  return JSON.stringify(["header", "main", "footer"].map(sel => {
+    const el = document.querySelector(sel);
+    if (!el) return { sel, present: false };
+    const r = el.getBoundingClientRect();
+    const hit = document.elementFromPoint(window.innerWidth / 2, r.top + r.height / 2);
+    return { sel, present: true, h: Math.round(r.height),
+             visible: !!(hit && hit.closest(sel)) };
+  }));
+})()
+```
+
+Any region with `visible: false` is being covered — usually by a pinned
+backdrop whose stacking context the region never joined.
+
+*No seams over a pinned backdrop* — measure the gap between adjacent regions.
+A transparent margin between them shows the backdrop through:
+
+```javascript
+(function () {
+  const m = document.querySelector("main").getBoundingClientRect();
+  const f = document.querySelector("footer").getBoundingClientRect();
+  return JSON.stringify({ gap: Math.round(f.top - m.bottom) });
+})()
+```
+
+**Scroll to the bottom of the page and screenshot that too.** The footer is the
+region most often broken and least often looked at.
+
 Take the comparison screenshots **scrolled**, not only at the top.
 
 For each difference: fix the HEEx or CSS, republish, re-screenshot. Cap at about
@@ -394,6 +493,8 @@ three rounds, then report whatever still differs rather than looping forever.
   heights before writing a pixel value.
 - **Do not extract only the section element.** Its children carry `position:
   fixed`/`sticky`, which is where pinned backdrops and parallax live.
+- **Do not treat "the element exists" as "the element is visible."** Hit-test
+  it; a pinned backdrop hides regions that query perfectly.
 - **Do not verify only the top of the page.** Scroll past the first section and
   compare again; a fixed backdrop and a normal one look identical until you do.
 - **Do not report success on a page you have not looked at.**
