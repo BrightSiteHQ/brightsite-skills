@@ -62,6 +62,17 @@ site, not an account); always pass `account_id` = the org and select the site wi
 
 ## Workflow
 
+### 0. Diagnose before rebuilding
+
+When the user wants the site improved or redesigned rather than a specific new design
+built, audit first. Read the live pages (`list_pages`, `get_page`), layouts,
+`get_global_code`, and the navigation/footer builtin content (`get_builtin_content`), then
+run the checklist in `design-audit.md` (same directory). Report the findings grouped by
+category, each with the page or entity and the proposed fix. Let the user veto items
+before creating the staging site. Fix inside the existing stack and the site's own design
+tokens (Tailwind config, global CSS). Don't rewrite pages that only need targeted fixes,
+and don't bring in fonts, palettes or motion values from outside the site.
+
 ### 1. Create the staging site
 
 ```
@@ -132,6 +143,17 @@ mcp__brightsite__promote_staging { account_id: "<ORG_ID>" }
   staging clone is known to drop them. Re-set any that are missing (with
   `update_page { site: "staging", ... }`) **before** calling `promote_staging`, or the
   promote wipes every meta title/description on the live site.
+- **Map every live URL.** List pages with `list_pages` (live) and
+  `list_pages { site: "staging" }`, plus posts if the site has a blog. Every live path must
+  either still exist on staging or have a 301 on staging pointing to its new destination.
+  Check with `list_redirects { site: "staging" }` and add missing ones with
+  `create_redirect { site: "staging", redirect_type: 301, ... }`. Check every page
+  `staging_diff` reports as `removed` and every page whose slug changed. For more than
+  about 20 redirects, use the `redirect-map-from-csv` skill.
+- **Keep heading structure and internal links.** Each rebuilt page keeps exactly one H1
+  and the key H2s of its live version unless the user chose to change them. Internal links
+  in the new layouts and navigation must point to paths that exist on staging, not to the
+  old slugs.
 - Run `staging_diff` and reconcile any unintended `drift` (Step 4).
 - Preview the staging build (Step 3).
 
@@ -146,6 +168,15 @@ The previously-live site is archived and restorable:
 mcp__brightsite__restore_staging_site { account_id }                    # undo the last promotion
 mcp__brightsite__restore_staging_site { account_id, site_id: "<archived_id>" }  # restore a specific archived site
 ```
+
+### 5b. After promoting
+
+- Spot-check 3-5 old URLs that now redirect, in an incognito window.
+- Run the `bulk-seo-audit` skill on the live site.
+- Tell the user to resubmit `/sitemap.xml` in Google Search Console, then watch GSC Pages
+  (404s, "Crawled - currently not indexed") and Performance for at least 30 days, compared
+  with the period before launch. If a ranking page drops, check its redirect and meta
+  before anything else.
 
 ### 6. (Optional) Discard instead of promoting
 
@@ -172,6 +203,8 @@ mcp__brightsite__discard_staging_site { account_id }   # permanently deletes sta
   flips the public site.
 - **Assuming promote is instant.** It's backgrounded (it backs up live first). Poll
   `get_staging_status` to confirm; don't report "done" off the immediate `"promoting"`.
+- **Promoting a rebuild that renamed or dropped pages without redirects.** Every old URL
+  with inbound links or rankings then returns 404.
 - **Expecting analytics/form submissions/tracking IDs to move.** They're account-level and
   shared — a promote never touches them. Only site content moves.
 
@@ -184,6 +217,8 @@ mcp__brightsite__discard_staging_site { account_id }   # permanently deletes sta
 - `mcp__brightsite__promote_staging` — flip staging → live (background; poll to confirm).
 - `mcp__brightsite__restore_staging_site` — undo a promotion / restore an archived site.
 - `mcp__brightsite__discard_staging_site` — delete the staging site and its content.
+- `mcp__brightsite__list_redirects` / `mcp__brightsite__create_redirect` — with
+  `site: "staging"`, check and add the 301s for changed or removed URLs before promoting.
 - Every content tool (`create_page`, `update_page`, `update_layout`, `update_global_code`,
   `create_component`, `update_component`, `request_upload`, `update_site_identity`, …) with
   the optional `site` param to target `"staging"` (or a site ID) instead of live.

@@ -48,6 +48,7 @@ The final layout should be:
 ```text
 ~/.claude/skills/migrate-wordpress-blog/SKILL.md
 ~/.claude/skills/generate-location-pages/SKILL.md
+~/.claude/skills/landing-page-from-brief/SKILL.md
 ~/.claude/skills/bulk-seo-audit/SKILL.md
 ~/.claude/skills/redirect-map-from-csv/SKILL.md
 ~/.claude/skills/client-handoff-checklist/SKILL.md
@@ -56,6 +57,7 @@ The final layout should be:
 ~/.claude/skills/visual-editor-authoring/editability-contract.md
 ~/.claude/skills/visual-editor-audit/SKILL.md
 ~/.claude/skills/staging-redesign/SKILL.md
+~/.claude/skills/staging-redesign/design-audit.md
 ~/.claude/skills/supabase-portal/SKILL.md
 ```
 
@@ -67,6 +69,7 @@ For project-local manual installs, copy individual skill directories (not just t
 |---|---|
 | [migrate-wordpress-blog](skills/migrate-wordpress-blog/SKILL.md) | Import posts from a WordPress XML export into BrightSite. Preserves slugs and generates 301 redirects for any that change. |
 | [generate-location-pages](skills/generate-location-pages/SKILL.md) | Programmatic SEO. Given a CSV of locations and a template, create one page per row. |
+| [landing-page-from-brief](skills/landing-page-from-brief/SKILL.md) | Build one campaign or offer landing page from a brief: intake, page structure, conversion copy, index/noindex call, then a draft built section by section in the site's own design. |
 | [bulk-seo-audit](skills/bulk-seo-audit/SKILL.md) | Walk every page and post on a site, check titles, meta descriptions, headings, and canonicals, and output a prioritized fix list. |
 | [redirect-map-from-csv](skills/redirect-map-from-csv/SKILL.md) | Turn a spreadsheet of old → new URLs into BrightSite redirects in one pass. |
 | [client-handoff-checklist](skills/client-handoff-checklist/SKILL.md) | Pre-launch QA. Verify site identity, error pages, blog settings, forms, and analytics are configured before going live. |

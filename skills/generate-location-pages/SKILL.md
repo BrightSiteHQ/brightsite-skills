@@ -35,6 +35,8 @@ Show the user:
 - The first row of the CSV
 - A preview of the rendered HEEx, meta title, meta description, and slug for that first row
 - The URL path each page will live at — `mcp__brightsite__create_page` returns a `path` field on the created page (e.g. `/emergency-plumbing-austin`); use that directly rather than reconstructing from the slug
+- **Rows skipped:** any row with fewer than 2 filled location-specific columns (landmark, neighborhood, population, local stat, etc.). List them with the reason. Do not generate a page for them.
+- **Cannibalization check:** call `mcp__brightsite__list_pages` and flag any existing page whose slug or title already targets the same `[service] in [city]`. Skip or merge those rows; never create a second page for the same keyword.
 
 **Wait for explicit "yes, generate them" before calling any `mcp__brightsite__create_page`.** Generating 200 pages by mistake is hard to undo.
 
@@ -55,6 +57,8 @@ After approval, iterate through remaining rows. For each row, call `mcp__brights
 - `status` — always `"draft"`. Do not publish from this skill.
 - `layout_id` — if provided
 
+Internal links in each page body: the parent service page, plus 2 sibling location pages (the nearest towns in the CSV). Mark any missing target with `[→ link to: {page}]` instead of inventing a URL.
+
 Throttle to ~5 pages/sec to avoid rate limits. Report progress every 10 pages.
 
 ### Step 4: Output a summary
@@ -68,6 +72,7 @@ After the batch completes, report:
 ## Anti-patterns to avoid
 
 - **Don't generate pages with identical body content and only the city name swapped.** Google de-indexes thin pSEO. Use at least 2-3 location-specific substitutions per page (landmark, population, neighborhood, local stat).
+- **Don't reuse a primary keyword across rows.** Each page targets one unique `[service] in [city]` keyword. Duplicates split rankings.
 - **Don't fabricate local facts.** If the user didn't provide a landmark column, leave that section out — don't hallucinate "Just minutes from [made-up landmark]."
 - **Don't publish 50+ pages at once on a new domain.** Suggest the user publishes in batches over a few days so the sitemap submission feels natural.
 - **Don't skip the meta description.** A blank meta description on a pSEO page is a wasted ranking opportunity. Generate one per page.
@@ -80,4 +85,4 @@ After the batch completes, report:
 
 - `mcp__brightsite__get_page` — read the template page
 - `mcp__brightsite__create_page` — create each location page
-- `mcp__brightsite__list_pages` — sanity-check that slugs don't collide with existing pages
+- `mcp__brightsite__list_pages` — check that slugs and keywords don't collide with existing pages
