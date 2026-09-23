@@ -116,6 +116,25 @@ either way.
 
 - `[FAIL]` if any page or post still has placeholder text. Reuse the `heex`/`heex_staged` (pages) and `content`/`content_staged` (posts) strings already fetched in steps 2 and 5 — do NOT call any write tools. Scan BOTH live and staged versions; staged placeholder text will go live the next time the user publishes. Substrings to flag (case-insensitive): `"lorem ipsum"`, `"TODO"`, `"FIXME"`, `"test test"`, `"placeholder"`, `"xxx"` as a standalone token. Report the entity ID, which version (live vs staged), and the matched substring so the user can locate it in the editor.
 
+### 12. Crawler access (robots.txt and sitemap)
+
+Run only if the public URL already resolves. Otherwise print `[INFO] skipped — domain not live yet; re-run after DNS cutover`.
+
+Fetch with read-only requests:
+
+```
+curl -s <public_url>/robots.txt
+curl -s -o /dev/null -w '%{http_code}' <public_url>/sitemap.xml
+```
+
+- `[FAIL]` if robots.txt has `Disallow: /` under `User-agent: *` (usually a leftover staging block)
+- `[FAIL]` if any search/citation crawler is fully disallowed: `Googlebot`, `Bingbot`, `OAI-SearchBot` (ChatGPT search), `PerplexityBot`, `Claude-SearchBot`. Blocking them removes the site from search results and from AI answer citations.
+- `[INFO]` report whether the training crawlers `GPTBot`, `ClaudeBot`, and `Google-Extended` are allowed, and any `Content-Signal:` line (e.g. `ai-train=no, search=yes, ai-input=yes`). Say in one line that blocking or allowing training is the client's choice, not a defect.
+- `[WARN]` if robots.txt has no `Sitemap:` directive
+- `[FAIL]` if `/sitemap.xml` does not return 200
+
+Report problems only. Don't try to change robots.txt.
+
 ## Output format
 
 End with a clear summary block:
@@ -176,5 +195,6 @@ Ship it.
 - `mcp__brightsite__list_redirects`
 - `mcp__brightsite__get_analytics`
 - `mcp__brightsite__get_global_code`
+- `curl` — `robots.txt` and `sitemap.xml` on the public URL (step 12)
 
-This skill is **read-only**. It never calls a write tool. The placeholder-text check in step 11 runs against content already loaded into context — it does not call `search_replace` or any other mutating tool.
+This skill is **read-only**. It never calls a write tool. The placeholder-text check in step 11 runs against content already loaded into context — it does not call `search_replace` or any other mutating tool. The `curl` requests in step 12 only read the public site.
