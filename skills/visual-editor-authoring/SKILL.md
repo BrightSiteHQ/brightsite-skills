@@ -130,6 +130,17 @@ confirm the markers are present in the stored HEEx and the `props_schema` is non
   `:if={@label}` is true when `@label == ""`. Guard on `x && x != ""`.
 - **Props with no `order` key.** They list in random order; users notice. Set `order` on
   every prop.
+- **`:has()` on `html`, `body`, `:root`, or a page/section wrapper** (`html:has(.x)`,
+  `body:has(.open)`, `.shell:not(:has(.sidebar))`). Chrome then restyles that whole subtree
+  on every node inserted or removed inside it, even a text node. On onbrightsite.com,
+  `html:has(.v3)` made each character of a typing animation a 1,693-element, 24ms style
+  recalc and made scrolling janky site-wide. Set a class in the HEEx instead (the template
+  knows the condition: `class={["shell", if(@sidebar != [], do: nil, else: "shell--solo")]}`),
+  or drop the condition when the CSS only loads where it applies. `:has()` on a small leaf
+  element (`.field:has(:focus-visible)`, `label:has(input:checked)`) or `:has(> .x)` on one
+  small element is fine.
+- **JS that writes to the DOM on a timer (typing effects, counters, tickers) running
+  off-screen.** Start and stop it with an `IntersectionObserver`.
 
 ## The dangerous step
 
